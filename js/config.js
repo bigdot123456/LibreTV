@@ -20,14 +20,97 @@ const SITE_CONFIG = {
     version: '1.0.3'
 };
 
-// API站点配置
+// API站点配置（新增影视+直播源，覆盖多类型内容）
 const API_SITES = {
+    // === 影视类源 ===
+    yingshi1: {
+        api: 'https://api.kkj.cn/api.php/provide/vod',
+        name: '酷客影视',
+        adult: false
+    },
+    yingshi1a: {
+        api: 'https://6296.kstore.vip/facat.json',
+        name: '肥猫',
+        adult: false
+    },
+    yingshi1b: {
+        api: 'https://www.fantuan.tv/api.php/provide/vod/',
+        name: '饭团影视',
+        adult: false
+    },
+    yingshi2: {
+        api: 'https://api.baiyug.cn/v1/?ac=videolist',
+        name: '白鱼影视',
+        adult: false
+    },
+    yingshi3: {
+        api: 'https://www.66yp.cc/api.php/provide/vod',
+        name: '66影视',
+        adult: false
+    },
+    yingshi4: {
+        api: 'https://api.911zy.cc/api.php/provide/vod',
+        name: '911影视',
+        adult: false
+    },
+    // === 成人影视源（需自行评估合规性） ===
+    adult1: {
+        api: 'https://api.av69.cc/api.php/provide/vod',
+        name: '成人影视源1',
+        adult: true
+    },
+    // === 直播类源 ===
+    live1: {
+        api: 'https://api.live.bilibili.com/room/v1/Room/get_info',
+        name: 'B站直播',
+        adult: false,
+        type: 'live'
+    },
+    live2: {
+        api: 'https://api.douban.com/v2/live/showing',
+        name: '豆瓣直播',
+        adult: false,
+        type: 'live'
+    },
+    live3: {
+        api: 'https://www.tvbox1.com/api.php/provide/live',
+        name: 'TVBox直播源',
+        adult: false,
+        type: 'live'
+    },
+    live4: {
+        api: 'https://live.fengniao.com/api/getLiveList',
+        name: '蜂鸟直播',
+        adult: false,
+        type: 'live'
+    },
+    // === 测试源（保留原有） ===
     testSource: {
-        api: 'https://www.example.com/api.php/provide/vod',
+        api: 'https://api.z360.cc/api.php/provide/vod/',
         name: '空内容测试源',
         adult: true
     }
     //ARCHIVE https://telegra.ph/APIs-08-12
+};
+
+  // ==========================================
+  // IPTV 直播源（CCTV + 卫视 + 地方台 + 超清）
+  // ==========================================
+  LIVE_URL: "https://raw.githubusercontent.com/iptv-org/iptv/master/channels/cn.m3u",
+
+  // 备用超强直播源（IPv6 秒开）
+  LIVE_URL_BACKUP: "https://raw.githubusercontent.com/Yang-1989/m3u/main/iptv.m3u",
+
+
+
+// 直播专属配置（新增）
+const LIVE_CONFIG = {
+    refreshInterval: 30000, // 直播列表刷新间隔（30秒）
+    liveTypeKey: 'type',    // 标记直播源的属性名
+    liveValue: 'live',      // 直播源的属性值
+    supportHLS: true,       // 是否支持HLS直播流
+    liveQuality: ['蓝光', '超清', '高清', '标清'], // 直播画质选项
+    timeout: 10000          // 直播源请求超时
 };
 
 // 定义合并方法
@@ -38,7 +121,7 @@ function extendAPISites(newSites) {
 // 暴露到全局
 window.API_SITES = API_SITES;
 window.extendAPISites = extendAPISites;
-
+window.LIVE_CONFIG = LIVE_CONFIG; // 暴露直播配置到全局
 
 // 添加聚合搜索的配置选项
 const AGGREGATED_SEARCH_CONFIG = {
@@ -46,7 +129,8 @@ const AGGREGATED_SEARCH_CONFIG = {
     timeout: 8000,            // 单个源超时时间（毫秒）
     maxResults: 10000,          // 最大结果数量
     parallelRequests: true,   // 是否并行请求所有源
-    showSourceBadges: true    // 是否显示来源徽章
+    showSourceBadges: true,   // 是否显示来源徽章
+    includeLiveSources: true  // 聚合搜索包含直播源（新增）
 };
 
 // 抽象API请求配置
@@ -68,11 +152,21 @@ const API_CONFIG = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Accept': 'application/json'
         }
+    },
+    live: { // 直播源请求配置（新增）
+        path: '?ac=liveList&wd=',
+        pagePath: '?ac=liveList&wd={query}&pg={page}',
+        maxPages: 10,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': 'application/json'
+        }
     }
 };
 
 // 优化后的正则表达式模式
 const M3U8_PATTERN = /\$https?:\/\/[^"'\s]+?\.m3u8/g;
+const LIVE_STREAM_PATTERN = /\$https?:\/\/[^"'\s]+?\.flv|\$https?:\/\/[^"'\s]+?\.ts/g; // 新增直播流正则
 
 // 添加自定义播放器URL
 const CUSTOM_PLAYER_URL = 'player.html'; // 使用相对路径引用本地player.html
@@ -87,7 +181,9 @@ const PLAYER_CONFIG = {
     filterAds: true,  // 是否启用广告过滤
     autoPlayNext: true,  // 默认启用自动连播功能
     adFilteringEnabled: true, // 默认开启分片广告过滤
-    adFilteringStorage: 'adFilteringEnabled' // 存储广告过滤设置的键名
+    adFilteringStorage: 'adFilteringEnabled', // 存储广告过滤设置的键名
+    liveBuffer: 5, // 直播缓冲时间（秒，新增）
+    liveAutoReconnect: true // 直播断连自动重连（新增）
 };
 
 // 增加错误信息本地化
@@ -96,7 +192,8 @@ const ERROR_MESSAGES = {
     TIMEOUT_ERROR: '请求超时，服务器响应时间过长',
     API_ERROR: 'API接口返回错误，请尝试更换数据源',
     PLAYER_ERROR: '播放器加载失败，请尝试其他视频源',
-    UNKNOWN_ERROR: '发生未知错误，请刷新页面重试'
+    UNKNOWN_ERROR: '发生未知错误，请刷新页面重试',
+    LIVE_ERROR: '直播流加载失败，请切换直播源或稍后重试' // 新增直播错误提示
 };
 
 // 添加进一步安全设置
