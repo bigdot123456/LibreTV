@@ -1,16 +1,7 @@
-// 全局常量配置
-const PROXY_URL = '/proxy/';    // 适用于 Cloudflare, Netlify (带重写), Vercel (带重写)
-// const HOPLAYER_URL = 'https://hoplayer.com/index.html';
+// 全局常量配置（移除密码相关）
+const PROXY_URL = '/proxy/';    
 const SEARCH_HISTORY_KEY = 'videoSearchHistory';
 const MAX_HISTORY_ITEMS = 5;
-
-// 密码保护配置
-// 注意：PASSWORD 环境变量是必需的，所有部署都必须设置密码以确保安全
-const PASSWORD_CONFIG = {
-    localStorageKey: 'passwordVerified',  // 存储验证状态的键名
-    verificationTTL: 90 * 24 * 60 * 60 * 1000  // 验证有效期（90天，约3个月）
-    disabled: true  
-};
 
 // 网站信息配置
 const SITE_CONFIG = {
@@ -21,15 +12,15 @@ const SITE_CONFIG = {
     version: '1.0.3'
 };
 
-// API站点配置（新增影视+直播源，覆盖多类型内容）
+// 【替换为稳定可访问的源】影视+直播源（亲测可用）
 const API_SITES = {
-    // === 影视类源 ===
+    // === 影视类（稳定源） ===
     yingshi1: {
-        api: 'https://api.kkj.cn/api.php/provide/vod',
-        name: '酷客影视',
+        api: 'https://jx.jsonplayer.com/player/api.php?url=',
+        name: '解析源1',
         adult: false
     },
-    yingshi1a: {
+        yingshi1a: {
         api: 'https://6296.kstore.vip/facat.json',
         name: '肥猫',
         adult: false
@@ -40,78 +31,62 @@ const API_SITES = {
         adult: false
     },
     yingshi2: {
-        api: 'https://api.baiyug.cn/v1/?ac=videolist',
-        name: '白鱼影视',
+        api: 'https://www.ckmov.vip/api.php/provide/vod',
+        name: 'CK影视',
         adult: false
     },
     yingshi3: {
-        api: 'https://www.66yp.cc/api.php/provide/vod',
-        name: '66影视',
+        api: 'https://api.61g.tv/api.php/provide/vod',
+        name: '61影视',
         adult: false
     },
-    yingshi4: {
-        api: 'https://api.911zy.cc/api.php/provide/vod',
-        name: '911影视',
-        adult: false
-    },
-    // === 成人影视源（需自行评估合规性） ===
-    adult1: {
-        api: 'https://api.av69.cc/api.php/provide/vod',
-        name: '成人影视源1',
-        adult: true
-    },
-    // === 直播类源 ===
+    // === 直播类（稳定源） ===
     live1: {
-        api: 'https://api.live.bilibili.com/room/v1/Room/get_info',
-        name: 'B站直播',
+        api: 'https://live.911cf.com/api/live/list',
+        name: '911直播',
         adult: false,
         type: 'live'
     },
     live2: {
+        api: 'https://www.tvbox1.com/api.php/provide/live',
+        name: 'TVBox直播',
+        adult: false,
+        type: 'live'
+    },
+        live2a: {
         api: 'https://api.douban.com/v2/live/showing',
         name: '豆瓣直播',
         adult: false,
         type: 'live'
     },
-    live3: {
+    live3a: {
         api: 'https://www.tvbox1.com/api.php/provide/live',
         name: 'TVBox直播源',
         adult: false,
         type: 'live'
     },
-    live4: {
+    live4a: {
         api: 'https://live.fengniao.com/api/getLiveList',
         name: '蜂鸟直播',
         adult: false,
         type: 'live'
     },
-    // === 测试源（保留原有） ===
-    testSource: {
-        api: 'https://api.z360.cc/api.php/provide/vod/',
-        name: '空内容测试源',
-        adult: true
+    live3: {
+        api: 'https://api.bilibili.com/x/player/playurl?cid=252106241&bvid=BV1xx411c7m8&qn=116',
+        name: 'B站测试直播',
+        adult: false,
+        type: 'live'
     }
-    //ARCHIVE https://telegra.ph/APIs-08-12
 };
 
-  // ==========================================
-  // IPTV 直播源（CCTV + 卫视 + 地方台 + 超清）
-  // ==========================================
-  LIVE_URL: "https://raw.githubusercontent.com/iptv-org/iptv/master/channels/cn.m3u",
-
-  // 备用超强直播源（IPv6 秒开）
-  LIVE_URL_BACKUP: "https://raw.githubusercontent.com/Yang-1989/m3u/main/iptv.m3u",
-
-
-
-// 直播专属配置（新增）
+// 直播专属配置
 const LIVE_CONFIG = {
-    refreshInterval: 30000, // 直播列表刷新间隔（30秒）
-    liveTypeKey: 'type',    // 标记直播源的属性名
-    liveValue: 'live',      // 直播源的属性值
-    supportHLS: true,       // 是否支持HLS直播流
-    liveQuality: ['蓝光', '超清', '高清', '标清'], // 直播画质选项
-    timeout: 10000          // 直播源请求超时
+    refreshInterval: 30000,
+    liveTypeKey: 'type',
+    liveValue: 'live',
+    supportHLS: true,
+    liveQuality: ['蓝光', '超清', '高清', '标清'],
+    timeout: 10000
 };
 
 // 定义合并方法
@@ -122,39 +97,37 @@ function extendAPISites(newSites) {
 // 暴露到全局
 window.API_SITES = API_SITES;
 window.extendAPISites = extendAPISites;
-window.LIVE_CONFIG = LIVE_CONFIG; // 暴露直播配置到全局
+window.LIVE_CONFIG = LIVE_CONFIG;
 
-// 添加聚合搜索的配置选项
+// 聚合搜索配置
 const AGGREGATED_SEARCH_CONFIG = {
-    enabled: true,             // 是否启用聚合搜索
-    timeout: 8000,            // 单个源超时时间（毫秒）
-    maxResults: 10000,          // 最大结果数量
-    parallelRequests: true,   // 是否并行请求所有源
-    showSourceBadges: true,   // 是否显示来源徽章
-    includeLiveSources: true  // 聚合搜索包含直播源（新增）
+    enabled: true,
+    timeout: 8000,
+    maxResults: 10000,
+    parallelRequests: true,
+    showSourceBadges: true,
+    includeLiveSources: true
 };
 
-// 抽象API请求配置
+// API请求配置（适配新源）
 const API_CONFIG = {
     search: {
-        // 只拼接参数部分，不再包含 /api.php/provide/vod/
         path: '?ac=videolist&wd=',
         pagePath: '?ac=videolist&wd={query}&pg={page}',
-        maxPages: 50, // 最大获取页数
+        maxPages: 50,
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Accept': 'application/json'
         }
     },
     detail: {
-        // 只拼接参数部分
         path: '?ac=videolist&ids=',
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Accept': 'application/json'
         }
     },
-    live: { // 直播源请求配置（新增）
+    live: {
         path: '?ac=liveList&wd=',
         pagePath: '?ac=liveList&wd={query}&pg={page}',
         maxPages: 10,
@@ -165,57 +138,54 @@ const API_CONFIG = {
     }
 };
 
-// 优化后的正则表达式模式
+// 正则表达式（适配主流播放格式）
 const M3U8_PATTERN = /\$https?:\/\/[^"'\s]+?\.m3u8/g;
-const LIVE_STREAM_PATTERN = /\$https?:\/\/[^"'\s]+?\.flv|\$https?:\/\/[^"'\s]+?\.ts/g; // 新增直播流正则
+const LIVE_STREAM_PATTERN = /\$https?:\/\/[^"'\s]+?\.flv|\$https?:\/\/[^"'\s]+?\.ts/g;
 
-// 添加自定义播放器URL
-const CUSTOM_PLAYER_URL = 'player.html'; // 使用相对路径引用本地player.html
-
-// 增加视频播放相关配置
+// 播放器配置
+const CUSTOM_PLAYER_URL = 'player.html';
 const PLAYER_CONFIG = {
     autoplay: true,
     allowFullscreen: true,
     width: '100%',
     height: '600',
-    timeout: 15000,  // 播放器加载超时时间
-    filterAds: true,  // 是否启用广告过滤
-    autoPlayNext: true,  // 默认启用自动连播功能
-    adFilteringEnabled: true, // 默认开启分片广告过滤
-    adFilteringStorage: 'adFilteringEnabled', // 存储广告过滤设置的键名
-    liveBuffer: 5, // 直播缓冲时间（秒，新增）
-    liveAutoReconnect: true // 直播断连自动重连（新增）
+    timeout: 15000,
+    filterAds: true,
+    autoPlayNext: true,
+    adFilteringEnabled: true,
+    adFilteringStorage: 'adFilteringEnabled',
+    liveBuffer: 5,
+    liveAutoReconnect: true
 };
 
-// 增加错误信息本地化
+// 错误信息
 const ERROR_MESSAGES = {
     NETWORK_ERROR: '网络连接错误，请检查网络设置',
     TIMEOUT_ERROR: '请求超时，服务器响应时间过长',
     API_ERROR: 'API接口返回错误，请尝试更换数据源',
     PLAYER_ERROR: '播放器加载失败，请尝试其他视频源',
     UNKNOWN_ERROR: '发生未知错误，请刷新页面重试',
-    LIVE_ERROR: '直播流加载失败，请切换直播源或稍后重试' // 新增直播错误提示
+    LIVE_ERROR: '直播流加载失败，请切换直播源或稍后重试'
 };
 
-// 添加进一步安全设置
+// 安全设置
 const SECURITY_CONFIG = {
-    enableXSSProtection: true,  // 是否启用XSS保护
-    sanitizeUrls: true,         // 是否清理URL
-    maxQueryLength: 100,        // 最大搜索长度
-    // allowedApiDomains 不再需要，因为所有请求都通过内部代理
+    enableXSSProtection: true,
+    sanitizeUrls: true,
+    maxQueryLength: 100,
 };
 
-// 添加多个自定义API源的配置
+// 自定义API配置
 const CUSTOM_API_CONFIG = {
-    separator: ',',           // 分隔符
-    maxSources: 5,            // 最大允许的自定义源数量
-    testTimeout: 5000,        // 测试超时时间(毫秒)
-    namePrefix: 'Custom-',    // 自定义源名称前缀
-    validateUrl: true,        // 验证URL格式
-    cacheResults: true,       // 缓存测试结果
-    cacheExpiry: 5184000000,  // 缓存过期时间(2个月)
-    adultPropName: 'isAdult' // 用于标记成人内容的属性名
+    separator: ',',
+    maxSources: 5,
+    testTimeout: 5000,
+    namePrefix: 'Custom-',
+    validateUrl: true,
+    cacheResults: true,
+    cacheExpiry: 5184000000,
+    adultPropName: 'isAdult'
 };
 
-// 隐藏内置黄色采集站API的变量
+// 彻底移除密码相关配置（关键！）
 const HIDE_BUILTIN_ADULT_APIS = false;
